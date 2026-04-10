@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { UploadCloud, Play, FileText, ChevronDown } from 'lucide-react';
-import Papa from 'papaparse';
 
 const CampaignCreator = () => {
   const [subject, setSubject] = useState('');
@@ -13,6 +12,7 @@ const CampaignCreator = () => {
   const [emailCount, setEmailCount] = useState(0);
   const [templates, setTemplates] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -28,23 +28,27 @@ const CampaignCreator = () => {
     }
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
-      // Quick parse to count emails visually
-      Papa.parse(selectedFile, {
-        header: true,
-        complete: (results) => {
-          let count = 0;
-          results.data.forEach(row => {
-            const keys = Object.keys(row);
-            const email = row['email'] || row['Email'] || row[keys[0]];
-            if (email) count++;
-          });
-          setEmailCount(count);
-        }
-      });
+      setIsAnalyzing(true);
+      
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      try {
+        const res = await axios.post('/api/campaigns/analyze-file', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        setEmailCount(res.data.totalEmails);
+      } catch (err) {
+        console.error('Failed to analyze file:', err);
+        toast.error('Could not extract emails from this file');
+        setEmailCount(0);
+      } finally {
+        setIsAnalyzing(false);
+      }
     }
   };
 
@@ -61,13 +65,13 @@ const CampaignCreator = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file || !subject || !content) {
-      toast.error("Please fill all fields and upload a CSV file.");
+      toast.error("Please fill all fields and upload a file.");
       return;
     }
 
     setIsSubmitting(true);
     const formData = new FormData();
-    formData.append('csvFile', file);
+    formData.append('file', file);
     formData.append('subject', subject);
     formData.append('content', content);
 
@@ -99,7 +103,7 @@ const CampaignCreator = () => {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* File Upload Area */}
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-2">Audience CSV</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">Audience File (CSV, PDF, DOCX, XLSX, TXT)</label>
           <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 hover:border-blue-400 transition-colors cursor-pointer"
                onClick={() => fileInputRef.current?.click()}
           >
@@ -107,14 +111,16 @@ const CampaignCreator = () => {
             {file ? (
               <div>
                 <p className="text-slate-800 font-medium">{file.name}</p>
-                <p className="text-green-600 text-sm font-medium mt-1">{emailCount} valid emails found</p>
+                <p className={`text-sm font-medium mt-1 ${isAnalyzing ? 'text-blue-500 animate-pulse' : 'text-green-600'}`}>
+                  {isAnalyzing ? 'Analyzing file...' : `${emailCount} valid emails found`}
+                </p>
               </div>
             ) : (
-              <p className="text-slate-500 text-sm">Click to upload CSV file or drag and drop</p>
+              <p className="text-slate-500 text-sm">Click to upload file (PDF, DOCX, XLSX, CSV, TXT) or drag and drop</p>
             )}
             <input 
               type="file" 
-              accept=".csv" 
+              accept=".csv,.pdf,.docx,.xlsx,.txt" 
               className="hidden" 
               ref={fileInputRef}
               onChange={handleFileChange}
