@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const multer = require('multer');
 const csvParser = require('csv-parser');
 const stream = require('stream');
+const { extractEmailsFromFile } = require('./utils/emailExtractor');
 
 const queueManager = require('./queueManager');
 const Log = require('./models/Log');
@@ -30,44 +31,52 @@ const upload = multer({ storage: multer.memoryStorage() });
 // Campaigns API
 // ----------------------------------------------------
 
-app.post('/api/campaigns/start', upload.single('csvFile'), (req, res) => {
+app.post('/api/campaigns/start', upload.single('file'), async (req, res) => {
   try {
     const { subject, content } = req.body;
     const file = req.file;
 
-    if (!file) return res.status(400).json({ error: 'CSV file is required' });
+    if (!file) return res.status(400).json({ error: 'File is required' });
     if (!subject || !content) return res.status(400).json({ error: 'Subject and content are required' });
 
-    const results = [];
-    const bufferStream = new stream.PassThrough();
-    bufferStream.end(file.buffer);
+    try {
+      const results = await extractEmailsFromFile(file.buffer, file.mimetype, file.originalname);
+      
+      if (results.length === 0) {
+        return res.status(400).json({ error: 'No valid emails found in the uploaded file' });
+      }
 
-    bufferStream
-      .pipe(csvParser())
-      .on('data', (data) => {
-        // Assume CSV has a column 'email' or the first column is email
-        const keys = Object.keys(data);
-        let email = data['email'] || data['Email'] || data[keys[0]];
-        if (email) results.push(email.trim());
-      })
-      .on('end', () => {
-        if (results.length === 0) {
-          return res.status(400).json({ error: 'No valid emails found in CSV' });
-        }
-        
-        try {
-          queueManager.start(results, subject, content);
-          return res.status(200).json({ 
-            message: 'Campaign started successfully', 
-            totalEmails: results.length,
-            campaignId: queueManager.campaignId,
-          });
-        } catch (err) {
-          return res.status(400).json({ error: err.message });
-        }
+      queueManager.start(results, subject, content);
+      return res.status(200).json({ 
+        message: 'Campaign started successfully', 
+        totalEmails: results.length,
+        campaignId: queueManager.campaignId,
       });
+    } catch (err) {
+      console.error('Extraction error:', err);
+      return res.status(400).json({ error: err.message });
+    }
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/api/campaigns/analyze-file', upload.single('file'), async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) return res.status(400).json({ error: 'File is required' });
+
+    try {
+      const results = await extractEmailsFromFile(file.buffer, file.mimetype, file.originalname);
+      return res.status(200).json({ 
+        totalEmails: results.length,
+        emails: results // Optional: could be used for preview
+      });
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
