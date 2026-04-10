@@ -9,7 +9,7 @@ export const AccountProvider = ({ children }) => {
   const [accounts, setAccounts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
   const refreshAccounts = async () => {
     setIsLoading(true);
