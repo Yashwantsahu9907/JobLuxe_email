@@ -161,6 +161,16 @@ app.post('/api/templates', async (req, res) => {
   }
 });
 
+app.delete('/api/templates/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Template.findByIdAndDelete(id);
+    res.json({ message: 'Template deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete template' });
+  }
+});
+
 // ----------------------------------------------------
 
 app.listen(PORT, () => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
-import { Save, Plus } from 'lucide-react';
+import { Save, Plus, X } from 'lucide-react';
 
 const TemplateManager = () => {
   const [templates, setTemplates] = useState([]);
@@ -41,6 +41,16 @@ const TemplateManager = () => {
       fetchTemplates();
     } catch (err) {
       alert('Failed to save template');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this template?')) return;
+    try {
+      await axios.delete(`/api/templates/${id}`);
+      fetchTemplates();
+    } catch (err) {
+      alert('Failed to delete template');
     }
   };
 
@@ -110,8 +120,15 @@ const TemplateManager = () => {
       {/* Grid of Templates */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {templates.map(t => (
-          <div key={t._id} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all group flex flex-col h-full">
-            <h3 className="text-lg font-bold text-slate-800 mb-1">{t.name}</h3>
+          <div key={t._id} className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-slate-300 transition-all group flex flex-col h-full relative">
+            <button 
+              onClick={() => handleDelete(t._id)}
+              className="absolute top-4 right-4 p-1.5 bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+              title="Delete Template"
+            >
+              <X size={16} />
+            </button>
+            <h3 className="text-lg font-bold text-slate-800 mb-1 pr-8">{t.name}</h3>
             <p className="text-sm font-medium text-slate-500 mb-4 truncate text-ellipsis">Subject: {t.subject}</p>
             
             <div className="flex-1 bg-slate-50 rounded-xl p-4 border border-slate-100 overflow-hidden relative">
