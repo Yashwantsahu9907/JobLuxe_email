@@ -109,7 +109,7 @@ app.get('/api/campaigns/status', (req, res) => {
 
 app.get('/api/logs', async (req, res) => {
   try {
-    const logs = await Log.find().sort({ sentAt: -1 }).limit(100);
+    const logs = await Log.find().select('-content').sort({ sentAt: -1 }).limit(100);
     res.json(logs);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch logs' });
@@ -118,10 +118,20 @@ app.get('/api/logs', async (req, res) => {
 
 app.get('/api/logs/all', async (req, res) => {
   try {
-    const logs = await Log.find().sort({ sentAt: -1 });
+    const logs = await Log.find().select('-content').sort({ sentAt: -1 });
     res.json(logs);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch logs' });
+  }
+});
+
+app.get('/api/logs/:id', async (req, res) => {
+  try {
+    const log = await Log.findById(req.params.id);
+    if (!log) return res.status(404).json({ error: 'Log not found' });
+    res.json(log);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch log detail' });
   }
 });
 

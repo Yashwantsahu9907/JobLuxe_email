@@ -112,6 +112,7 @@ class QueueManager {
         campaignId: this.campaignId,
         recipient: email,
         subject: this.subject,
+        content: this.content,
         status: 'success',
       });
       
@@ -124,6 +125,7 @@ class QueueManager {
         campaignId: this.campaignId,
         recipient: email,
         subject: this.subject,
+        content: this.content,
         status: 'failed',
         errorMsg: error.message,
       });
