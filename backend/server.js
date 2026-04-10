@@ -10,6 +10,8 @@ const { extractEmailsFromFile } = require('./utils/emailExtractor');
 const queueManager = require('./queueManager');
 const Log = require('./models/Log');
 const Template = require('./models/Template');
+const Account = require('./models/Account');
+const nodemailer = require('nodemailer');
 
 dotenv.config();
 
@@ -187,6 +189,101 @@ app.delete('/api/templates/:id', async (req, res) => {
     res.json({ message: 'Template deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete template' });
+  }
+});
+
+// ----------------------------------------------------
+// Accounts API
+// ----------------------------------------------------
+
+app.get('/api/accounts', async (req, res) => {
+  try {
+    const accounts = await Account.find().sort({ createdAt: -1 });
+    res.json(accounts);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch accounts' });
+  }
+});
+
+app.post('/api/accounts', async (req, res) => {
+  try {
+    const { email, appPassword } = req.body;
+    if (!email || !appPassword) {
+      return res.status(400).json({ error: 'Email and App Password are required' });
+    }
+
+    // Verify credentials with nodemailer
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: email,
+        pass: appPassword,
+      },
+      // Short timeout for verification
+      connectionTimeout: 5000, 
+    });
+
+    try {
+      await transporter.verify();
+    } catch (verifyError) {
+      console.error('Verification failed:', verifyError);
+      return res.status(400).json({ 
+        error: 'Invalid credentials. Please check your email and App Password. Ensure 2FA is enabled and you are using an "App Password" not your regular password.' 
+      });
+    }
+
+    // Check if it's the first account, make it active
+    const count = await Account.countDocuments();
+    const account = new Account({ 
+      email, 
+      appPassword, 
+      isActive: count === 0 
+    });
+    
+    await account.save();
+    res.status(201).json(account);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'Email already exists' });
+    }
+    res.status(500).json({ error: 'Failed to add account' });
+  }
+});
+
+app.put('/api/accounts/:id/select', async (req, res) => {
+  try {
+    const { id } = req.params;
+    // Set all to inactive
+    await Account.updateMany({}, { isActive: false });
+    // Set selected to active
+    const account = await Account.findByIdAndUpdate(id, { isActive: true }, { new: true });
+    if (!account) return res.status(404).json({ error: 'Account not found' });
+    res.json(account);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to select account' });
+  }
+});
+
+app.delete('/api/accounts/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const account = await Account.findByIdAndDelete(id);
+    if (!account) return res.status(404).json({ error: 'Account not found' });
+    
+    // If we deleted the active account, pick another one to be active
+    if (account.isActive) {
+      const another = await Account.findOne();
+      if (another) {
+        another.isActive = true;
+        await another.save();
+      }
+    }
+    
+    res.json({ message: 'Account deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete account' });
   }
 });
 

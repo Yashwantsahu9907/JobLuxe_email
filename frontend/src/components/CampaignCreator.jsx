@@ -3,7 +3,8 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
-import { UploadCloud, Play, FileText, ChevronDown } from 'lucide-react';
+import { UploadCloud, Play, FileText, ChevronDown, AlertCircle } from 'lucide-react';
+import { useAccount } from '../context/AccountContext';
 
 const CampaignCreator = () => {
   const [subject, setSubject] = useState('');
@@ -14,6 +15,7 @@ const CampaignCreator = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef(null);
+  const { activeAccount } = useAccount();
 
   useEffect(() => {
     fetchTemplates();
@@ -69,6 +71,11 @@ const CampaignCreator = () => {
       return;
     }
 
+    if (!activeAccount) {
+      toast.error("Please setup an email account first using the button at the top right.");
+      return;
+    }
+
     setIsSubmitting(true);
     const formData = new FormData();
     formData.append('file', file);
@@ -99,6 +106,18 @@ const CampaignCreator = () => {
         <h2 className="text-2xl font-bold text-slate-800 tracking-tight">Create New Campaign</h2>
         <p className="text-slate-500 mt-1">Upload your audience and compose your email.</p>
       </div>
+
+      {!activeAccount && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <AlertCircle className="text-amber-600 mt-0.5" size={20} />
+          <div>
+            <h4 className="text-amber-800 font-bold text-sm">Action Required: No Active Account</h4>
+            <p className="text-amber-700 text-sm mt-0.5">
+              You must set up an email account before you can launch a campaign. Use the <b>"Setup Account"</b> button in the top-right corner to get started.
+            </p>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* File Upload Area */}

@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const Log = require('./models/Log');
+const Account = require('./models/Account');
 require('dotenv').config();
 
 class QueueManager {
@@ -14,22 +15,52 @@ class QueueManager {
     this.campaignId = null;
     this.currentIndex = 0;
     this.delayMs = parseInt(process.env.EMAIL_DELAY_MS) || 3000;
+    this.transporter = null;
+    this.activeAccount = null;
+  }
+
+  async getTransporter() {
+    const activeAccount = await Account.findOne({ isActive: true });
     
-    this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: false, // true for 465, false for other ports
+    if (!activeAccount) {
+      // Fallback to .env if no account in DB (for backward compatibility or initial setup)
+      if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+        return nodemailer.createTransport({
+          host: process.env.SMTP_HOST || 'smtp.gmail.com',
+          port: process.env.SMTP_PORT || 587,
+          secure: false,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+      }
+      throw new Error('No active email account configured');
+    }
+
+    this.activeAccount = activeAccount;
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com', // Default to gmail for now as requested
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        user: activeAccount.email,
+        pass: activeAccount.appPassword,
       },
     });
   }
 
-  start(emails, subject, content) {
+  async start(emails, subject, content) {
     if (this.status === 'running') {
       throw new Error('A campaign is already running');
     }
+    
+    try {
+      this.transporter = await this.getTransporter();
+    } catch (err) {
+      throw new Error(err.message);
+    }
+
     this.emails = emails;
     this.subject = subject;
     this.content = content;
@@ -97,8 +128,9 @@ class QueueManager {
     this.currentIndex++;
 
     try {
+      const fromEmail = this.activeAccount ? this.activeAccount.email : process.env.SMTP_USER;
       const mailOptions = {
-        from: process.env.SMTP_USER,
+        from: fromEmail,
         to: email,
         subject: this.subject,
         html: this.content,
