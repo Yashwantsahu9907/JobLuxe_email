@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Mail, Shield, Check, Trash2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const AccountSwitcherModal = ({ isOpen, onClose }) => {
   const [accounts, setAccounts] = useState([]);
@@ -20,9 +21,8 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
   const fetchAccounts = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/accounts`);
-      const data = await response.json();
-      setAccounts(data);
+      const response = await axios.get(`${API_BASE_URL}/accounts`);
+      setAccounts(response.data);
     } catch (error) {
       toast.error('Failed to fetch accounts');
     } finally {
@@ -32,18 +32,11 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
 
   const handleSelect = async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/accounts/${id}/select`, {
-        method: 'PUT',
-      });
-      if (response.ok) {
-        toast.success('Account switched');
-        fetchAccounts();
-      } else {
-        const data = await response.json();
-        toast.error(data.error || 'Failed to switch account');
-      }
+      await axios.put(`${API_BASE_URL}/accounts/${id}/select`);
+      toast.success('Account switched');
+      fetchAccounts();
     } catch (error) {
-      toast.error('Error switching account');
+      toast.error(error.response?.data?.error || 'Error switching account');
     }
   };
 
@@ -52,17 +45,11 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
     if (!confirm('Are you sure you want to delete this account?')) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/accounts/${id}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        toast.success('Account deleted');
-        fetchAccounts();
-      } else {
-        toast.error('Failed to delete account');
-      }
+      await axios.delete(`${API_BASE_URL}/accounts/${id}`);
+      toast.success('Account deleted');
+      fetchAccounts();
     } catch (error) {
-      toast.error('Error deleting account');
+      toast.error(error.response?.data?.error || 'Error deleting account');
     }
   };
 
@@ -70,23 +57,13 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/accounts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newAccount),
-      });
-
-      if (response.ok) {
-        toast.success('Account added successfully');
-        setNewAccount({ email: '', appPassword: '' });
-        setIsAdding(false);
-        fetchAccounts();
-      } else {
-        const data = await response.json();
-        toast.error(data.error || 'Failed to add account');
-      }
+      await axios.post(`${API_BASE_URL}/accounts`, newAccount);
+      toast.success('Account added successfully');
+      setNewAccount({ email: '', appPassword: '' });
+      setIsAdding(false);
+      fetchAccounts();
     } catch (error) {
-      toast.error('Error adding account');
+      toast.error(error.response?.data?.error || 'Error adding account');
     } finally {
       setIsSubmitting(false);
     }

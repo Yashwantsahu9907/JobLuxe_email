@@ -29,6 +29,32 @@ mongoose.connect(process.env.MONGODB_URI)
 // Multer setup for handling file uploads in memory
 const upload = multer({ storage: multer.memoryStorage() });
 
+const authMiddleware = require('./utils/auth');
+
+// ----------------------------------------------------
+// Auth API
+// ----------------------------------------------------
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+  
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    return res.json({ token, message: 'Login successful' });
+  }
+
+  return res.status(401).json({ error: 'Invalid Admin Credentials' });
+});
+
+app.use('/api/campaigns', authMiddleware);
+app.use('/api/logs', authMiddleware);
+app.use('/api/templates', authMiddleware);
+app.use('/api/accounts', authMiddleware);
+
 // ----------------------------------------------------
 // Campaigns API
 // ----------------------------------------------------
