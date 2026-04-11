@@ -284,7 +284,7 @@ app.put('/api/accounts/:id/select', async (req, res) => {
     // Set all to inactive
     await Account.updateMany({}, { isActive: false });
     // Set selected to active
-    const account = await Account.findByIdAndUpdate(id, { isActive: true }, { new: true });
+    const account = await Account.findByIdAndUpdate(id, { isActive: true },{ returnDocument: 'after' });
     if (!account) return res.status(404).json({ error: 'Account not found' });
     res.json(account);
   } catch (err) {
