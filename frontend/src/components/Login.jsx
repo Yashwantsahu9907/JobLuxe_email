@@ -17,7 +17,7 @@ const Login = () => {
     try {
       const res = await axios.post('/api/auth/login', { email, password });
       if (res.data.token) {
-        localStorage.setItem('adminToken', res.data.token);
+        sessionStorage.setItem('adminToken', res.data.token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
         toast.success('Logged in successfully');
         navigate('/');
