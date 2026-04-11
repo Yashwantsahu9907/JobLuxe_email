@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
 const AccountContext = createContext();
 
@@ -14,8 +15,8 @@ export const AccountProvider = ({ children }) => {
   const refreshAccounts = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/accounts`);
-      const data = await response.json();
+      const response = await axios.get(`${API_BASE_URL}/accounts`);
+      const data = response.data;
       setAccounts(data);
       const active = data.find(acc => acc.isActive);
       setActiveAccount(active || null);

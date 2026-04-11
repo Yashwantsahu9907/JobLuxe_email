@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Mail, History, FileText, Send, User } from 'lucide-react';
+import { Mail, History, FileText, Send, User, LogOut } from 'lucide-react';
 import { useAccount } from '../context/AccountContext';
 import ActiveCampaignPanel from './ActiveCampaignPanel';
 import AccountSwitcherModal from './AccountSwitcherModal';
@@ -60,6 +60,19 @@ const DashboardLayout = ({ children }) => {
             History Logs
           </NavLink>
         </nav>
+
+        <div className="p-4 border-t border-slate-200">
+          <button
+            onClick={() => {
+              localStorage.removeItem('adminToken');
+              window.location.href = '/login';
+            }}
+            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-600 hover:bg-red-50 transition-all font-medium"
+          >
+            <LogOut size={20} />
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* Main Content */}
