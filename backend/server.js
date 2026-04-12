@@ -266,9 +266,7 @@ app.post('/api/accounts', async (req, res) => {
 
     // Verify credentials with nodemailer
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      service: 'gmail',
       family: 4, // Force IPv4 to avoid ENETUNREACH on Render
       auth: {
         user: email,

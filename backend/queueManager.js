@@ -41,9 +41,7 @@ class QueueManager {
 
     this.activeAccount = activeAccount;
     return nodemailer.createTransport({
-      host: 'smtp.gmail.com', // Default to gmail for now as requested
-      port: 587,
-      secure: false,
+      service: 'gmail',
       family: 4, // Force IPv4
       auth: {
         user: activeAccount.email,
