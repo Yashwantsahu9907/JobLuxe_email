@@ -34,7 +34,10 @@ class QueueManager {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
           },
-          connectionTimeout: 20000,
+          tls: {
+            servername: 'smtp.gmail.com'
+          },
+          connectionTimeout: 60000,
         });
       }
       throw new Error('No active email account configured');
@@ -49,7 +52,10 @@ class QueueManager {
         user: activeAccount.email,
         pass: activeAccount.appPassword,
       },
-      connectionTimeout: 20000,
+      tls: {
+        servername: 'smtp.gmail.com'
+      },
+      connectionTimeout: 60000,
     });
   }
 

@@ -274,8 +274,11 @@ app.post('/api/accounts', async (req, res) => {
         user: email,
         pass: appPassword,
       },
-      connectionTimeout: 20000,
-      greetingTimeout: 20000,
+      tls: {
+        servername: 'smtp.gmail.com' // Required when using IP address with SSL/TLS
+      },
+      connectionTimeout: 60000, 
+      greetingTimeout: 60000,
     });
 
     try {
