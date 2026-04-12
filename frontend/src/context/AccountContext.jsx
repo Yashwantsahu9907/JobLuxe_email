@@ -11,6 +11,12 @@ export const AccountProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshAccounts = async () => {
+    const token = sessionStorage.getItem('adminToken');
+    if (!token) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await api.get('/api/accounts');
@@ -19,7 +25,10 @@ export const AccountProvider = ({ children }) => {
       const active = data.find(acc => acc.isActive);
       setActiveAccount(active || null);
     } catch (error) {
-      console.error('Failed to fetch accounts:', error);
+      // Only log if it's not a 401 (which is expected when not logged in)
+      if (error.response?.status !== 401) {
+        console.error('Failed to fetch accounts:', error);
+      }
     } finally {
       setIsLoading(false);
     }
