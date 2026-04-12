@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Download, Trash2, CheckCircle, XCircle, Eye, X, Mail } from 'lucide-react';
 import Papa from 'papaparse';
@@ -20,7 +20,7 @@ const HistoryLogs = () => {
     try {
       setIsLoadingLog(true);
       setIsViewModalOpen(true);
-      const res = await axios.get(`/api/logs/${id}`);
+      const res = await api.get(`/api/logs/${id}`);
       setSelectedLog(res.data);
     } catch (err) {
       toast.error('Failed to fetch log details');
@@ -37,7 +37,7 @@ const HistoryLogs = () => {
 
   const fetchLogs = async () => {
     try {
-      const res = await axios.get('/api/logs');
+      const res = await api.get('/api/logs');
       setLogs(res.data);
     } catch (err) {
       console.error('Error fetching logs', err);
@@ -46,7 +46,7 @@ const HistoryLogs = () => {
 
   const handleClearLogs = async () => {
     try {
-      await axios.delete('/api/logs');
+      await api.delete('/api/logs');
       setLogs([]);
       toast.success('Logs cleared');
     } catch (err) {
@@ -56,7 +56,7 @@ const HistoryLogs = () => {
 
   const handleDownload = async () => {
     try {
-      const res = await axios.get('/api/logs/all');
+      const res = await api.get('/api/logs/all');
       const csv = Papa.unparse(res.data.map(l => ({
         Campaign: l.campaignId,
         Recipient: l.recipient,

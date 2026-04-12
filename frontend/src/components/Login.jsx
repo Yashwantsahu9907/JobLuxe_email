@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../utils/api';
 import toast from 'react-hot-toast';
 import { Lock, Mail } from 'lucide-react';
 
@@ -15,10 +15,9 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const res = await axios.post('/api/auth/login', { email, password });
+      const res = await api.post('/api/auth/login', { email, password });
       if (res.data.token) {
-        localStorage.setItem('adminToken', res.data.token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        sessionStorage.setItem('adminToken', res.data.token);
         toast.success('Logged in successfully');
         navigate('/');
       }

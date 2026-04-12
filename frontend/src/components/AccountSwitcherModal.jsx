@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Mail, Shield, Check, Trash2, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import axios from 'axios';
+import api from '../utils/api';
 
 const AccountSwitcherModal = ({ isOpen, onClose }) => {
   const [accounts, setAccounts] = useState([]);
@@ -9,8 +9,6 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [newAccount, setNewAccount] = useState({ email: '', appPassword: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
   useEffect(() => {
     if (isOpen) {
@@ -21,7 +19,7 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
   const fetchAccounts = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get(`${API_BASE_URL}/accounts`);
+      const response = await api.get('/api/accounts');
       setAccounts(response.data);
     } catch (error) {
       toast.error('Failed to fetch accounts');
@@ -32,7 +30,7 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
 
   const handleSelect = async (id) => {
     try {
-      await axios.put(`${API_BASE_URL}/accounts/${id}/select`);
+      await api.put(`/api/accounts/${id}/select`);
       toast.success('Account switched');
       fetchAccounts();
     } catch (error) {
@@ -45,7 +43,7 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
     if (!confirm('Are you sure you want to delete this account?')) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/accounts/${id}`);
+      await api.delete(`/api/accounts/${id}`);
       toast.success('Account deleted');
       fetchAccounts();
     } catch (error) {
@@ -57,7 +55,7 @@ const AccountSwitcherModal = ({ isOpen, onClose }) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await axios.post(`${API_BASE_URL}/accounts`, newAccount);
+      await api.post('/api/accounts', newAccount);
       toast.success('Account added successfully');
       setNewAccount({ email: '', appPassword: '' });
       setIsAdding(false);

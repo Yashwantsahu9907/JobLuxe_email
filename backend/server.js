@@ -5,6 +5,8 @@ const dotenv = require('dotenv');
 const multer = require('multer');
 const csvParser = require('csv-parser');
 const stream = require('stream');
+const path = require('path');
+const jwt = require('jsonwebtoken');
 const { extractEmailsFromFile } = require('./utils/emailExtractor');
 
 const queueManager = require('./queueManager');
@@ -18,7 +20,29 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'https://jobluxe-email.onrender.com',
+  'https://jobluxe-email-1.onrender.com'
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      // In production, if it's the same domain, it might not have an origin header or it might match.
+      // But let's be more lenient with Render domains for now to fix the blockage.
+      if (origin.endsWith('.onrender.com')) {
+        return callback(null, true);
+      }
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Connect to MongoDB
@@ -42,7 +66,10 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-    const jwt = require('jsonwebtoken');
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is missing in environment variables!');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
     return res.json({ token, message: 'Login successful' });
   }
@@ -58,7 +85,9 @@ app.use('/api/accounts', authMiddleware);
 // ----------------------------------------------------
 // Campaigns API
 // ----------------------------------------------------
-
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+})
 app.post('/api/campaigns/start', upload.single('file'), async (req, res) => {
   try {
     const { subject, content } = req.body;
@@ -314,6 +343,18 @@ app.delete('/api/accounts/:id', async (req, res) => {
 });
 
 // ----------------------------------------------------
+
+// Serve React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+  
+  // The "catchall" handler: for any request that doesn't
+  // match one above, send back React's index.html file.
+  app.get('*', (req, res) => {
+    const indexPath = path.resolve(__dirname, '../frontend/dist/index.html');
+    res.sendFile(indexPath);
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

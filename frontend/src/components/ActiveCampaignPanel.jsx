@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { Play, Pause, Square, Activity } from 'lucide-react';
 import ConfirmModal from './ConfirmModal';
 import toast from 'react-hot-toast';
@@ -12,7 +12,7 @@ const ActiveCampaignPanel = () => {
     // Poll status every second
     const interval = setInterval(async () => {
       try {
-        const res = await axios.get('/api/campaigns/status');
+        const res = await api.get('/api/campaigns/status');
         setStatusData(res.data);
       } catch (err) {
         console.error('Error fetching status', err);
@@ -22,16 +22,16 @@ const ActiveCampaignPanel = () => {
   }, []);
 
   const handlePause = async () => {
-    await axios.post('/api/campaigns/pause');
+    await api.post('/api/campaigns/pause');
   };
 
   const handleResume = async () => {
-    await axios.post('/api/campaigns/resume');
+    await api.post('/api/campaigns/resume');
   };
 
   const handleStop = async () => {
     try {
-      await axios.post('/api/campaigns/stop');
+      await api.post('/api/campaigns/stop');
       toast.success('Campaign stopped');
     } catch (err) {
       toast.error('Failed to stop campaign');

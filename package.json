@@ -1,0 +1,12 @@
+{
+  "name": "jobluxe-email",
+  "version": "1.0.0",
+  "description": "Root package for deployment on Render/Railway/Heroku",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build && cd ../backend && npm install",
+    "start": "cd backend && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

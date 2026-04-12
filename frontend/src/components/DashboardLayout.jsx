@@ -64,7 +64,7 @@ const DashboardLayout = ({ children }) => {
         <div className="p-4 border-t border-slate-200">
           <button
             onClick={() => {
-              localStorage.removeItem('adminToken');
+              sessionStorage.removeItem('adminToken');
               window.location.href = '/login';
             }}
             className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-red-600 hover:bg-red-50 transition-all font-medium"
