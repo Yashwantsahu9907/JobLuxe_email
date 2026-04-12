@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import toast from 'react-hot-toast';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -20,7 +20,7 @@ const TemplateManager = () => {
 
   const fetchTemplates = async () => {
     try {
-      const res = await axios.get('/api/templates');
+      const res = await api.get('/api/templates');
       setTemplates(res.data);
     } catch (err) {
       console.error('Error fetching templates', err);
@@ -35,7 +35,7 @@ const TemplateManager = () => {
     }
 
     try {
-      await axios.post('/api/templates', { name, subject, content });
+      await api.post('/api/templates', { name, subject, content });
       toast.success('Template saved successfully!');
       setName('');
       setSubject('');
@@ -49,7 +49,7 @@ const TemplateManager = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/templates/${id}`);
+      await api.delete(`/api/templates/${id}`);
       fetchTemplates();
       toast.success('Template deleted');
     } catch (err) {

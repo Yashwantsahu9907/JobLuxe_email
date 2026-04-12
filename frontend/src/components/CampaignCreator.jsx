@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import toast from 'react-hot-toast';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -23,7 +23,7 @@ const CampaignCreator = () => {
 
   const fetchTemplates = async () => {
     try {
-      const res = await axios.get('/api/templates');
+      const res = await api.get('/api/templates');
       setTemplates(res.data);
     } catch (err) {
       console.error('Failed to fetch templates');
@@ -40,7 +40,7 @@ const CampaignCreator = () => {
       formData.append('file', selectedFile);
 
       try {
-        const res = await axios.post('/api/campaigns/analyze-file', formData, {
+        const res = await api.post('/api/campaigns/analyze-file', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         setEmailCount(res.data.totalEmails);
@@ -83,7 +83,7 @@ const CampaignCreator = () => {
     formData.append('content', content);
 
     try {
-      await axios.post('/api/campaigns/start', formData, {
+      await api.post('/api/campaigns/start', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       toast.success('Campaign started successfully!');
