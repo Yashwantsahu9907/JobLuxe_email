@@ -27,9 +27,9 @@ class QueueManager {
       // Fallback to .env if no account in DB (for backward compatibility or initial setup)
       if (process.env.SMTP_USER && process.env.SMTP_PASS) {
         return nodemailer.createTransport({
-          host: process.env.SMTP_HOST || 'smtp.gmail.com',
-          port: process.env.SMTP_PORT || 587,
-          secure: false,
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true,
           lookup: (hostname, options, callback) => {
             dns.lookup(hostname, { family: 4 }, callback);
           },
@@ -37,6 +37,7 @@ class QueueManager {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
           },
+          connectionTimeout: 20000,
         });
       }
       throw new Error('No active email account configured');
@@ -45,8 +46,8 @@ class QueueManager {
     this.activeAccount = activeAccount;
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       lookup: (hostname, options, callback) => {
         dns.lookup(hostname, { family: 4 }, callback);
       },
@@ -54,6 +55,7 @@ class QueueManager {
         user: activeAccount.email,
         pass: activeAccount.appPassword,
       },
+      connectionTimeout: 20000,
     });
   }
 

@@ -268,8 +268,8 @@ app.post('/api/accounts', async (req, res) => {
     // Verify credentials with nodemailer
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 587,
-      secure: false,
+      port: 465,
+      secure: true,
       lookup: (hostname, options, callback) => {
         dns.lookup(hostname, { family: 4 }, callback);
       },
@@ -277,8 +277,8 @@ app.post('/api/accounts', async (req, res) => {
         user: email,
         pass: appPassword,
       },
-      // Short timeout for verification
-      connectionTimeout: 5000, 
+      connectionTimeout: 20000, // Increased to 20s
+      greetingTimeout: 20000,
     });
 
     try {
