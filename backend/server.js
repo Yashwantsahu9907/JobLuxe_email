@@ -1,4 +1,5 @@
 const express = require('express');
+const dns = require('dns');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -266,8 +267,12 @@ app.post('/api/accounts', async (req, res) => {
 
     // Verify credentials with nodemailer
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      family: 4, // Force IPv4 to avoid ENETUNREACH on Render
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      lookup: (hostname, options, callback) => {
+        dns.lookup(hostname, { family: 4 }, callback);
+      },
       auth: {
         user: email,
         pass: appPassword,

@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const dns = require('dns');
 const Log = require('./models/Log');
 const Account = require('./models/Account');
 require('dotenv').config();
@@ -29,7 +30,9 @@ class QueueManager {
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: process.env.SMTP_PORT || 587,
           secure: false,
-          family: 4, // Force IPv4
+          lookup: (hostname, options, callback) => {
+            dns.lookup(hostname, { family: 4 }, callback);
+          },
           auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
@@ -41,8 +44,12 @@ class QueueManager {
 
     this.activeAccount = activeAccount;
     return nodemailer.createTransport({
-      service: 'gmail',
-      family: 4, // Force IPv4
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      lookup: (hostname, options, callback) => {
+        dns.lookup(hostname, { family: 4 }, callback);
+      },
       auth: {
         user: activeAccount.email,
         pass: activeAccount.appPassword,
