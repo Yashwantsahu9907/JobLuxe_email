@@ -345,13 +345,18 @@ app.delete('/api/accounts/:id', async (req, res) => {
 // ----------------------------------------------------
 
 // Serve React app in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../frontend/dist')));
+if (process.env.NODE_ENV === 'production' || process.env.SERVE_FRONTEND === 'true') {
+  const distPath = path.join(__dirname, '../frontend/dist');
+  
+  // Debug log to verify path during startup
+  console.log(`Checking for production frontend assets at: ${distPath}`);
+  
+  app.use(express.static(distPath));
   
   // The "catchall" handler: for any request that doesn't
   // match one above, send back React's index.html file.
   app.get('*', (req, res) => {
-    const indexPath = path.resolve(__dirname, '../frontend/dist/index.html');
+    const indexPath = path.join(distPath, 'index.html');
     res.sendFile(indexPath);
   });
 }
