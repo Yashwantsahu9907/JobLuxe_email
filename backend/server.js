@@ -355,7 +355,7 @@ if (process.env.NODE_ENV === 'production' || process.env.SERVE_FRONTEND === 'tru
   
   // The "catchall" handler: for any request that doesn't
   // match one above, send back React's index.html file.
-  app.get('*', (req, res) => {
+  app.get('(.*)', (req, res) => {
     const indexPath = path.join(distPath, 'index.html');
     res.sendFile(indexPath);
   });
