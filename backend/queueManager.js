@@ -27,12 +27,9 @@ class QueueManager {
       // Fallback to .env if no account in DB (for backward compatibility or initial setup)
       if (process.env.SMTP_USER && process.env.SMTP_PASS) {
         return nodemailer.createTransport({
-          host: 'smtp.gmail.com',
+          host: '64.233.184.108', // Hardcoded IPv4
           port: 465,
           secure: true,
-          lookup: (hostname, options, callback) => {
-            dns.lookup(hostname, { family: 4 }, callback);
-          },
           auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
@@ -45,12 +42,9 @@ class QueueManager {
 
     this.activeAccount = activeAccount;
     return nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: '64.233.184.108', // Hardcoded IPv4
       port: 465,
       secure: true,
-      lookup: (hostname, options, callback) => {
-        dns.lookup(hostname, { family: 4 }, callback);
-      },
       auth: {
         user: activeAccount.email,
         pass: activeAccount.appPassword,

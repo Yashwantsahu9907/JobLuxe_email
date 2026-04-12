@@ -267,17 +267,14 @@ app.post('/api/accounts', async (req, res) => {
 
     // Verify credentials with nodemailer
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
+      host: '64.233.184.108', // Hardcoded IPv4 address for smtp.gmail.com
       port: 465,
       secure: true,
-      lookup: (hostname, options, callback) => {
-        dns.lookup(hostname, { family: 4 }, callback);
-      },
       auth: {
         user: email,
         pass: appPassword,
       },
-      connectionTimeout: 20000, // Increased to 20s
+      connectionTimeout: 20000,
       greetingTimeout: 20000,
     });
 
