@@ -6,6 +6,7 @@ const multer = require('multer');
 const csvParser = require('csv-parser');
 const stream = require('stream');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 const { extractEmailsFromFile } = require('./utils/emailExtractor');
 
 const queueManager = require('./queueManager');
@@ -19,8 +20,27 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'https://jobluxe-email.onrender.com',
+  'https://jobluxe-email-1.onrender.com'
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      // In production, if it's the same domain, it might not have an origin header or it might match.
+      // But let's be more lenient with Render domains for now to fix the blockage.
+      if (origin.endsWith('.onrender.com')) {
+        return callback(null, true);
+      }
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    }
+    return callback(null, true);
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -46,7 +66,10 @@ app.post('/api/auth/login', (req, res) => {
   }
 
   if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-    const jwt = require('jsonwebtoken');
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is missing in environment variables!');
+      return res.status(500).json({ error: 'Server configuration error' });
+    }
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '1d' });
     return res.json({ token, message: 'Login successful' });
   }
