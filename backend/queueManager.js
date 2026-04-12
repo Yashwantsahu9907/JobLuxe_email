@@ -29,6 +29,7 @@ class QueueManager {
           host: process.env.SMTP_HOST || 'smtp.gmail.com',
           port: process.env.SMTP_PORT || 587,
           secure: false,
+          family: 4, // Force IPv4
           auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS,
@@ -43,6 +44,7 @@ class QueueManager {
       host: 'smtp.gmail.com', // Default to gmail for now as requested
       port: 587,
       secure: false,
+      family: 4, // Force IPv4
       auth: {
         user: activeAccount.email,
         pass: activeAccount.appPassword,

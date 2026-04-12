@@ -269,6 +269,7 @@ app.post('/api/accounts', async (req, res) => {
       host: 'smtp.gmail.com',
       port: 587,
       secure: false,
+      family: 4, // Force IPv4 to avoid ENETUNREACH on Render
       auth: {
         user: email,
         pass: appPassword,
