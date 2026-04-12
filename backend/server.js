@@ -62,7 +62,9 @@ app.use('/api/accounts', authMiddleware);
 // ----------------------------------------------------
 // Campaigns API
 // ----------------------------------------------------
-
+app.get('/', (req, res) => {
+  res.send('Hello World!');
+})
 app.post('/api/campaigns/start', upload.single('file'), async (req, res) => {
   try {
     const { subject, content } = req.body;
